@@ -114,6 +114,21 @@
             text-align: center;
         }
 
+        /* Check-in vraag */
+        .check-in-question {
+            font-size: 1.375rem;
+            font-weight: 600;
+            color: var(--slate-800);
+            margin-bottom: 2rem;
+            letter-spacing: -0.01em;
+            transition: opacity 0.4s, color 0.4s;
+        }
+
+        .check-in-question.dimmed {
+            opacity: 0.3;
+            color: var(--slate-400);
+        }
+
         /* Timer display */
         .timer-container {
             position: relative;
@@ -314,6 +329,9 @@
 
     <main class="main">
         <div class="card">
+            <!-- Check-in vraag -->
+            <p id="checkInQuestion" class="check-in-question">Wat houdt je op dit moment bezig?</p>
+
             <!-- Timer -->
             <div class="timer-container">
                 <div class="timer-ring-bg"></div>
@@ -368,6 +386,7 @@
         const ctx = canvas.getContext('2d');
         const timerValue = document.getElementById('timerValue');
         const statusText = document.getElementById('statusText');
+        const checkInQuestion = document.getElementById('checkInQuestion');
         const startView = document.getElementById('startView');
         const runningView = document.getElementById('runningView');
         const completeView = document.getElementById('completeView');
@@ -439,6 +458,7 @@
             runningView.classList.remove('hidden');
             completeView.classList.add('hidden');
             
+            checkInQuestion.classList.add('dimmed');
             statusText.textContent = 'Luister... niet onderbreken.';
             statusText.classList.add('active', 'pulsing');
             
@@ -453,6 +473,7 @@
             runningView.classList.add('hidden');
             startView.classList.remove('hidden');
             
+            checkInQuestion.classList.remove('dimmed');
             statusText.textContent = 'Klaar om te starten';
             statusText.classList.remove('active', 'pulsing');
             
@@ -478,6 +499,7 @@
             completeView.classList.add('hidden');
             startView.classList.remove('hidden');
             
+            checkInQuestion.classList.remove('dimmed');
             statusText.textContent = 'Klaar om te starten';
             statusText.classList.remove('active');
             
