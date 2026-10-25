@@ -10,7 +10,7 @@
     <meta name="oc:labels" content="vergaderen">
     <meta name="oc:kort" content="Rondje: elk één minuut aan het woord">
     <meta name="oc:volgorde" content="80">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox=&quot;0 0 40 40&quot; fill=&quot;none&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E %3Ccircle cx=&quot;20&quot; cy=&quot;20&quot; r=&quot;16&quot; fill=&quot;%23ecfdf5&quot; stroke=&quot;%2310b981&quot; stroke-width=&quot;1.5&quot;/%3E %3Ccircle cx=&quot;20&quot; cy=&quot;20&quot; r=&quot;10&quot; fill=&quot;none&quot; stroke=&quot;%2310b981&quot; stroke-width=&quot;1.5&quot; opacity=&quot;0.5&quot;/%3E %3Ccircle cx=&quot;20&quot; cy=&quot;20&quot; r=&quot;4&quot; fill=&quot;none&quot; stroke=&quot;%2310b981&quot; stroke-width=&quot;1.5&quot; opacity=&quot;0.3&quot;/%3E %3Ccircle cx=&quot;20&quot; cy=&quot;20&quot; r=&quot;2&quot; fill=&quot;%2310b981&quot;/%3E %3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23f8fafc' stroke='%23e2e8f0' stroke-width='1.5'/%3E%3Ccircle cx='20' cy='22' r='11' fill='%23fff' stroke='%2394a3b8' stroke-width='2'/%3E%3Cpath d='M20 22V14A8 8 0 1 1 13.07 26.00Z' fill='%2310b981'/%3E%3Cpath d='M17 7.5h6M20 7.5v3.5' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M29 12.5l1.8-1.8' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="/fonts/fonts.css">
     <style>
         :root {
@@ -167,7 +167,8 @@
         }
 
         .timer-value {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: inherit;
+            font-variant-numeric: tabular-nums;
             font-size: 4.5rem;
             font-weight: 700;
             color: var(--slate-800);
@@ -365,12 +366,7 @@
             Projectmanagement
         </a>
         <div class="logo" aria-hidden="true">
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="20" cy="20" r="16" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/>
-                    <circle cx="20" cy="20" r="10" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
-                    <circle cx="20" cy="20" r="4" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3"/>
-                    <circle cx="20" cy="20" r="2" fill="#10b981"/>
-                </svg>
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/><circle cx="20" cy="22" r="11" fill="#fff" stroke="#94a3b8" stroke-width="2"/><path d="M20 22V14A8 8 0 1 1 13.07 26.00Z" fill="#10b981"/><path d="M17 7.5h6M20 7.5v3.5" stroke="#64748b" stroke-width="2" stroke-linecap="round"/><path d="M29 12.5l1.8-1.8" stroke="#64748b" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
         <h1 class="title">De Mono-Minuut</h1>
         <p class="subtitle">Rondje: elk één minuut aan het woord</p>
@@ -457,6 +453,8 @@
         // Draw the timer ring
         function drawRing(progress) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            progress = Math.min(1, Math.max(0, progress));
+            if (progress >= 1) return;   // tijd om: de ring is leeg
             
             // Calculate color - from bright green to faded
             const hue = 152; // emerald green
@@ -541,6 +539,11 @@
             
             statusText.textContent = 'Dankjewel.';
             statusText.classList.remove('pulsing');
+
+            // klaar moet er anders uitzien dan klaar om te starten: lege ring, groene nul
+            timerValue.textContent = '0';
+            timerValue.style.color = '#047857';
+            drawRing(1);
         }
 
         // Reset
@@ -553,6 +556,7 @@
             statusText.classList.remove('active');
             
             timerValue.textContent = '60';
+            timerValue.style.color = '';
             drawRing(0);
         }
 
