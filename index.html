@@ -22,7 +22,7 @@
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         [hidden] { display:none !important; }
-        body { font-family:'DM Sans', system-ui, sans-serif; background:var(--slate-50); color:var(--slate-700); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+        body { font-family:'DM Sans', system-ui, sans-serif; background:var(--slate-50); color:var(--slate-700); line-height:1.5; min-height:100vh; min-height:100dvh; -webkit-font-smoothing:antialiased; }
         button, input, textarea { font:inherit; color:inherit; }
         button { background:none; border:0; cursor:pointer; }
 
@@ -117,7 +117,7 @@
         body.present { background:#fff; }
         body.present .oc-head, body.present .oc-footer, body.present .set, body.present #present-btn, body.present .hint { display:none !important; }
         body.present .exit-present { display:inline-flex; }
-        body.present .main { max-width:none; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+        body.present .main { max-width:none; min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:1.5rem; }
         body.present .card { border:0; box-shadow:none; width:100%; max-width:1100px; padding:0; }
         body.present .card.ended { box-shadow:none; }
         body.present { --ring: clamp(220px, min(46vh, 80vw), 520px); }
@@ -146,6 +146,14 @@
         @media (hover: none) and (pointer: coarse) { .hint { display:none; } }
         @media (forced-colors: active) { .chip[aria-pressed="true"], .switch[aria-pressed="true"] { border:2px solid Highlight; } }
     
+/* Soepel op gsm: geen tikvertraging, eigen tikfeedback, grote startknop, velden van 16px (geen inzoomen) */
+a, button, summary, label { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.btn:active, .chip:active, .link-btn:active, .set summary:active { filter:brightness(0.93); }
+@media (pointer: coarse) {
+    .controls .btn { min-height:52px; }
+    #go { min-height:56px; min-width:9.5rem; font-size:1.0625rem; }
+    .own input { font-size:1rem; }
+}
 .oc-groot{width:44px;height:44px;min-width:44px;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;gap:0!important;flex:0 0 auto}.oc-groot svg{width:20px;height:20px;margin:0!important}
 </style>
 </head>
@@ -188,7 +196,7 @@
             <details class="set" id="set">
                 <summary><span>Vraag, duur en sprekers</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
                 <div class="set-body">
-                    <label><span class="lbl">Vraag</span><input class="field" id="q-in" maxlength="160" placeholder="Wat houdt je op dit moment bezig?"></label>
+                    <label><span class="lbl">Vraag</span><input class="field" id="q-in" maxlength="160" placeholder="Wat houdt je op dit moment bezig?" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"></label>
                     <div>
                         <span class="lbl" id="dur-lbl">Tijd per persoon</span>
                         <div class="chips" role="group" aria-labelledby="dur-lbl" id="chips">
@@ -197,7 +205,7 @@
                             <button type="button" class="chip" data-s="90" aria-pressed="false">1,5 min</button>
                             <button type="button" class="chip" data-s="120" aria-pressed="false">2 min</button>
                             <button type="button" class="chip" data-s="180" aria-pressed="false">3 min</button>
-                            <label class="own">of <input id="own-s" type="number" inputmode="numeric" min="10" max="900" placeholder="…" aria-label="Eigen duur in seconden"> sec</label>
+                            <label class="own">of <input id="own-s" type="number" inputmode="numeric" enterkeyhint="done" min="10" max="900" placeholder="…" aria-label="Eigen duur in seconden"> sec</label>
                         </div>
                     </div>
                     <div>
@@ -397,10 +405,11 @@ const parseNames = t => [...new Set(String(t).split(/[\n,;]+/).map(s => s.trim()
 // phase: ready | running | paused | ended | finished (alle sprekers geweest)
 let phase = 'ready', idx = 0, left = st.seconds, endAt = 0, raf = null;
 const canvas = $('canvas'), ctx = canvas.getContext('2d');
+// De maat van de ring meten we alleen na een resize of bij groot scherm, niet elke frame (geen layout per frame)
+let ringPx = 0;
 function fitCanvas() {
-    const r = $('timer').getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-    const px = Math.max(100, Math.round(r.width * dpr));
-    if (canvas.width !== px) { canvas.width = px; canvas.height = px; }
+    if (!ringPx) { const r = $('timer').getBoundingClientRect(), dpr = window.devicePixelRatio || 1; ringPx = Math.max(100, Math.round(r.width * dpr)); }
+    if (canvas.width !== ringPx) { canvas.width = ringPx; canvas.height = ringPx; }
 }
 function drawRing() {
     fitCanvas();
@@ -455,16 +464,19 @@ function render() {
 }
 const fmtDur = s => s % 60 === 0 ? `${s / 60} min` : s > 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`;
 
+// Elke frame alleen de ring tekenen; teksten en knoppen enkel als de seconde verspringt
+let shownSec = -1;
 function tick() {
     left = Math.max(0, (endAt - performance.now()) / 1000);
     if (left <= 0) { finishTurn(); return; }
-    render();
+    const sec = Math.ceil(left);
+    if (sec !== shownSec) { shownSec = sec; render(); } else drawRing();
     raf = requestAnimationFrame(tick);
 }
 function start() {
     if (phase === 'ended' || phase === 'finished') { restart(); }
     if (phase === 'ready') left = st.seconds;
-    phase = 'running'; endAt = performance.now() + left * 1000;
+    phase = 'running'; endAt = performance.now() + left * 1000; shownSec = -1;
     cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); wake(true); render();
 }
 function pause() { phase = 'paused'; cancelAnimationFrame(raf); wake(false); render(); }
@@ -532,6 +544,8 @@ function setSeconds(s) {
     if (phase === 'ready' || phase === 'ended' || phase === 'finished') { phase = 'ready'; left = s; }
     renderSettings(); render();
 }
+// Enter in een los veld: klaar, het toetsenbord gaat dicht
+['q-in', 'own-s'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(id).blur(); } }));
 $('q-in').addEventListener('input', () => { st.question = $('q-in').value.trim().slice(0, 160) || DEFAULT_Q; save(); render(); });
 $('chips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setSeconds(+c.dataset.s); });
 $('own-s').addEventListener('change', () => {
@@ -578,13 +592,14 @@ function present(on) {
     document.body.classList.toggle('present', on);
     if (on) { try { if (document.documentElement.requestFullscreen && window.self === window.top) document.documentElement.requestFullscreen().catch(() => {}); } catch {} $('go').focus(); }
     else { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} $('present-btn').focus(); }
+    ringPx = 0;
     requestAnimationFrame(render);
 }
 $('present-btn').addEventListener('click', () => present(true));
 $('exit-present').addEventListener('click', () => present(false));
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('present')) present(false); });
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('present')) present(false); });
-window.addEventListener('resize', () => requestAnimationFrame(drawRing));
+window.addEventListener('resize', () => { ringPx = 0; requestAnimationFrame(drawRing); });
 
 /* ---------- Melding met ongedaan maken ---------- */
 let undoFn = null, toastT = null;
