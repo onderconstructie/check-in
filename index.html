@@ -5,582 +5,600 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>De Mono-Minuut – Onder Constructie</title>
-    <meta name="description" content="Eén minuut ongestoord spreken. Voor check-ins zonder interruptie.">
+    <meta name="description" content="Iedereen om de beurt even ongestoord aan het woord. Kies zelf de vraag, de duur en de volgorde.">
     <meta name="oc:groep" content="projecten">
     <meta name="oc:labels" content="vergaderen">
-    <meta name="oc:kort" content="Rondje: elk één minuut aan het woord">
+    <meta name="oc:kort" content="Rondje: iedereen om de beurt aan het woord">
     <meta name="oc:volgorde" content="80">
+    <meta name="oc:opslag" content="checkin.v1">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23f8fafc' stroke='%23e2e8f0' stroke-width='1.5'/%3E%3Ccircle cx='20' cy='22' r='11' fill='%23fff' stroke='%2394a3b8' stroke-width='2'/%3E%3Cpath d='M20 22V14A8 8 0 1 1 13.07 26.00Z' fill='%2310b981'/%3E%3Cpath d='M17 7.5h6M20 7.5v3.5' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M29 12.5l1.8-1.8' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="/fonts/fonts.css">
     <style>
         :root {
-            --slate-50: #f8fafc;
-            --slate-100: #f1f5f9;
-            --slate-200: #e2e8f0;
-            --slate-300: #cbd5e1;
-            --slate-400: #94a3b8;
-            --slate-500: #64748b;
-            --slate-600: #475569;
-            --slate-700: #334155;
-            --slate-800: #1e293b;
-            --white: #ffffff;
-            --accent: #10b981;
-            --accent-light: #d1fae5;
+            --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1; --slate-400:#94a3b8;
+            --slate-500:#64748b; --slate-600:#475569; --slate-700:#334155; --slate-800:#1e293b; --wit:#ffffff;
+            --accent:#10b981; --accent-dark:#047857; --accent-hover:#065f46; --accent-light:#d1fae5; --accent-50:#ecfdf5;
+            --ring: clamp(180px, min(34vh, 66vw), 280px);
         }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        [hidden] { display:none !important; }
+        body { font-family:'DM Sans', system-ui, sans-serif; background:var(--slate-50); color:var(--slate-700); line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+        button, input, textarea { font:inherit; color:inherit; }
+        button { background:none; border:0; cursor:pointer; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'DM Sans', system-ui, sans-serif;
-            background: var(--slate-50);
-            color: var(--slate-700);
-            line-height: 1.5;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Header */
-        .header {
-            background: var(--white);
-            border-bottom: 1px solid var(--slate-200);
-            padding: 1.25rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .back-link {
-            position: absolute;
-            left: 2rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--slate-400);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .back-link:hover {
-            color: var(--accent);
-        }
-
-        .back-link svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-        }
-
-        .logo svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .header-text h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--slate-800);
-            letter-spacing: -0.02em;
-        }
-
-        .header-text p {
-            font-size: 0.8125rem;
-            color: var(--slate-500);
-        }
-
-        /* Main */
-        .main {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 3rem 2rem 4rem;
-        }
-
-        /* Card */
-        .card {
-            background: var(--white);
-            border-radius: 16px;
-            padding: 2.5rem;
-            border: 1.5px solid var(--slate-200);
-            text-align: center;
-        }
-
-        /* Check-in vraag */
-        .check-in-question {
-            font-size: 1.375rem;
-            font-weight: 600;
-            color: var(--slate-800);
-            margin-bottom: 2rem;
-            letter-spacing: -0.01em;
-            transition: opacity 0.4s, color 0.4s;
-        }
-
-        .check-in-question.dimmed {
-            opacity: 0.3;
-            color: var(--slate-400);
-        }
-
-        /* Timer display */
-        .timer-container {
-            position: relative;
-            width: 280px;
-            height: 280px;
-            margin: 0 auto 2rem;
-        }
-
-        .timer-ring-bg {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            border: 3px solid var(--slate-100);
-        }
-
-        .timer-canvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .timer-center {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .timer-value {
-            font-family: inherit;
-            font-variant-numeric: tabular-nums;
-            font-size: 4.5rem;
-            font-weight: 700;
-            color: var(--slate-800);
-            line-height: 1;
-            letter-spacing: -0.02em;
-        }
-
-        .timer-label {
-            font-size: 0.875rem;
-            color: var(--slate-400);
-            margin-top: 0.25rem;
-        }
-
-        /* Status text */
-        .status-text {
-            font-size: 1.125rem;
-            color: var(--slate-500);
-            margin-bottom: 2rem;
-            min-height: 1.75rem;
-        }
-
-        .status-text.active {
-            color: var(--accent);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-text.pulsing {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* Button */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: var(--white);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #0d9668;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: var(--slate-100);
-            color: var(--slate-600);
-            border: 1.5px solid var(--slate-200);
-        }
-
-        .btn-secondary:hover {
-            background: var(--slate-200);
-            border-color: var(--slate-300);
-        }
-
-        /* Hidden state */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Fade animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .quote {
-            font-size: 0.875rem;
-            color: var(--accent);
-        }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-            .back-link {
-                position: static;
-                margin-bottom: 0.75rem;
-            }
-            
-            .header {
-                flex-direction: column;
-                padding: 1rem 1.5rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .main {
-                padding: 2rem 1.25rem 3rem;
-            }
-
-            .card {
-                padding: 2rem 1.5rem;
-            }
-
-            .timer-container {
-                width: 240px;
-                height: 240px;
-            }
-
-            .timer-value {
-                font-size: 3.5rem;
-            }
-        }
-    
-        /* Onder Constructie: gedeelde footer en quote (huisstijl) */
-        footer.oc-footer {
-            text-align: center;
-            padding: 2rem 1.5rem calc(env(safe-area-inset-bottom, 0px) + 2rem);
-            margin-top: 2rem;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #10b981;
-        }
-
-        footer.oc-footer .oc-quote {
-            font-size: 0.8125rem;
-            line-height: 1.5;
-            color: #10b981;
-            opacity: 1;
-            font-style: normal;
-            margin: 0;
-        }
-    
-        /* ===== Huisstijl oktober 2026: kop (patroon B), contrast, focus, tikdoelen ===== */
-        .oc-head { display:block; text-align:center; background:#fff; border-bottom:1px solid #e2e8f0; padding:1.5rem 1.25rem 1.75rem; position:relative; }
-        .oc-head .back-link { position:absolute; top:0.875rem; left:1rem; min-height:44px; display:inline-flex; align-items:center; gap:0.5rem; padding:0 0.5rem; margin:0; font-size:0.875rem; color:#64748b; text-decoration:none; border-radius:8px; transition:color 0.2s; }
+        /* Kop (huisstijl, patroon B) */
+        .oc-head { display:block; text-align:center; background:#fff; border-bottom:1px solid #e2e8f0; padding:1.25rem 1.25rem 1.25rem; position:relative; }
+        .oc-head .back-link { position:absolute; top:0.875rem; left:1rem; min-height:44px; display:inline-flex; align-items:center; gap:0.5rem; padding:0 0.5rem; font-size:0.875rem; color:#64748b; text-decoration:none; border-radius:8px; transition:color 0.2s; }
         .oc-head .back-link:hover { color:#047857; }
         .oc-head .back-link svg { width:16px; height:16px; flex:none; }
-        .oc-head .logo { display:block; width:56px; height:56px; margin:0 auto; }
-        .oc-head .logo svg { display:block; width:56px; height:56px; }
-        .oc-head .title { font-size:1.625rem; font-weight:700; color:#1e293b; letter-spacing:-0.03em; line-height:1.2; margin:0.5rem 0 0.25rem; }
+        .oc-head .logo { display:block; width:48px; height:48px; margin:0 auto; }
+        .oc-head .logo svg { display:block; width:48px; height:48px; }
+        .oc-head .title { font-size:1.5rem; font-weight:700; color:#1e293b; letter-spacing:-0.03em; line-height:1.2; margin:0.375rem 0 0.125rem; }
         .oc-head .subtitle { font-size:0.9375rem; color:#64748b; max-width:520px; margin:0 auto; }
         @media (max-width:640px) {
-            .oc-head { padding-top:0.5rem; }
-            .oc-head .back-link { position:static; margin:0 auto 0.375rem; }
+            .oc-head { padding:0.5rem 1rem 1rem; }
+            .oc-head .back-link { position:static; margin:0 auto 0.25rem; }
+            .oc-head .logo, .oc-head .logo svg { width:40px; height:40px; }
+            .oc-head .title { font-size:1.375rem; }
         }
-        footer.oc-footer, footer.oc-footer .oc-quote, .footer .quote { color:#047857; }
-        :focus-visible { outline:2px solid #047857 !important; outline-offset:2px; }
-        input[type=range]:focus-visible { outline:2px solid #047857 !important; outline-offset:4px; }
-        .oc-import { color:#047857; min-height:44px; }
-        .oc-import:focus-visible { outline-color:#047857; }
-        .sr-only { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
-        .timer-label { color:#64748b; }
-        .check-in-question.dimmed { opacity:1; color:#64748b; }
-        .status-text.active { color:#065f46; }
-        @keyframes pulse { 0%, 100% { opacity:1; } 50% { opacity:0.75; } }
-        @media (prefers-reduced-motion: reduce) { .status-text.pulsing { animation:none; } }
-        .btn { min-height:44px; }
-        .btn-primary { background:#047857; color:#fff; border-radius:10px; font-size:15px; }
-        .btn-primary:hover:not(:disabled) { background:#065f46; }
-        @media (max-width:360px) { .timer-container { width:220px; height:220px; } }
+        .main { max-width:620px; margin:0 auto; padding:1rem 1rem 2rem; }
+        .card { background:var(--wit); border-radius:16px; padding:1.25rem 1.25rem 1rem; border:1.5px solid var(--slate-200); text-align:center; transition:border-color 0.4s, box-shadow 0.4s; }
+        .card.ended { border-color:#6ee7b7; box-shadow:0 0 0 4px var(--accent-50); }
+
+        .question { font-size:1.25rem; font-weight:600; color:var(--slate-800); letter-spacing:-0.01em; line-height:1.35; word-break:break-word; }
+        .turn { margin-top:0.5rem; font-size:1rem; color:var(--slate-600); font-variant-numeric:tabular-nums; }
+        .turn b { color:var(--slate-800); font-weight:700; }
+        .turn .sep { color:var(--slate-300); margin:0 0.375rem; }
+        .turn .next { color:var(--slate-500); }
+
+        /* Timer */
+        .timer { position:relative; width:var(--ring); height:var(--ring); margin:0.75rem auto 0.75rem; }
+        .timer-bg { position:absolute; inset:0; border-radius:50%; border:3px solid var(--slate-100); }
+        .timer canvas { position:absolute; inset:0; width:100%; height:100%; }
+        .timer-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .timer-value { font-variant-numeric:tabular-nums; font-size:calc(var(--ring) * 0.25); font-weight:700; color:var(--slate-800); line-height:1; letter-spacing:-0.02em; }
+        .timer-label { font-size:0.9375rem; color:var(--slate-500); margin-top:0.25rem; }
+        .timer.last .timer-value { color:#b45309; }
+        .timer.done .timer-value { color:var(--accent-dark); }
+
+        /* Knoppen */
+        .controls { display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; min-height:44px; padding:0 1.125rem; border-radius:10px; font-size:0.9375rem; font-weight:600; white-space:nowrap; transition:background 0.15s; }
+        .btn svg { width:18px; height:18px; flex:none; }
+        .btn-primary { background:var(--accent-dark); color:#fff; min-width:8.5rem; }
+        .btn-primary:hover { background:var(--accent-hover); }
+        .btn-soft { background:var(--slate-100); color:var(--slate-700); }
+        .btn-soft:hover { background:var(--slate-200); }
+        .btn-ghost { color:var(--slate-600); }
+        .btn-ghost:hover { background:var(--slate-100); }
+        .status { margin-top:0.625rem; font-size:0.9375rem; color:var(--slate-600); min-height:1.5em; }
+        .status.active { color:#065f46; font-weight:600; }
+        .hint { font-size:0.8125rem; color:var(--slate-500); margin-top:0.125rem; }
+        kbd { font:inherit; font-size:0.75rem; font-weight:600; padding:0 0.375rem; border:1px solid var(--slate-300); border-bottom-width:2px; border-radius:5px; background:var(--slate-50); color:var(--slate-700); }
+
+        /* Instellingen */
+        .set { margin-top:0.75rem; border-top:1px solid var(--slate-100); text-align:left; }
+        .set summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.375rem; min-height:44px; font-size:0.875rem; font-weight:600; color:var(--accent-dark); border-radius:8px; }
+        .set summary::-webkit-details-marker { display:none; }
+        .set summary svg { width:16px; height:16px; transition:transform 0.2s; }
+        .set[open] summary svg { transform:rotate(180deg); }
+        .set-body { display:flex; flex-direction:column; gap:1rem; padding:0.5rem 0 0.25rem; }
+        .lbl { display:block; font-size:0.8125rem; font-weight:600; color:var(--slate-600); margin-bottom:0.375rem; }
+        .lbl small { font-weight:400; color:var(--slate-500); }
+        .field { width:100%; min-height:44px; padding:0.5625rem 0.75rem; border:1.5px solid var(--slate-200); border-radius:10px; background:var(--slate-50); font-size:1rem; outline:none; }
+        .field:focus { border-color:var(--accent); background:#fff; }
+        textarea.field { resize:vertical; min-height:5.5rem; line-height:1.45; }
+        .chips { display:flex; flex-wrap:wrap; gap:0.375rem; align-items:center; }
+        .chip { min-height:44px; padding:0 0.875rem; border-radius:999px; border:1px solid var(--slate-200); background:#fff; font-size:0.875rem; font-weight:600; color:var(--slate-600); font-variant-numeric:tabular-nums; }
+        .chip:hover { border-color:var(--slate-300); }
+        .chip[aria-pressed="true"] { background:var(--slate-800); border-color:var(--slate-800); color:#fff; }
+        .own { display:inline-flex; align-items:center; gap:0.375rem; font-size:0.875rem; color:var(--slate-500); }
+        .own input { width:4.5rem; min-height:44px; text-align:center; border:1.5px solid var(--slate-200); border-radius:10px; background:var(--slate-50); font-size:0.9375rem; font-variant-numeric:tabular-nums; outline:none; }
+        .own input:focus { border-color:var(--accent); background:#fff; }
+        .row { display:flex; flex-wrap:wrap; align-items:center; gap:0.375rem 0.75rem; margin-top:0.375rem; }
+        .count { font-size:0.8125rem; color:var(--slate-500); font-variant-numeric:tabular-nums; margin-right:auto; }
+        .link-btn { min-height:44px; padding:0 0.5rem; border-radius:8px; font-size:0.8125rem; font-weight:600; color:var(--accent-dark); display:inline-flex; align-items:center; gap:0.375rem; }
+        .link-btn:hover { background:var(--accent-50); }
+        .link-btn svg { width:15px; height:15px; }
+        .switch-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; font-size:0.9375rem; }
+        .switch-row small { display:block; font-size:0.8125rem; color:var(--slate-500); }
+        .switch { position:relative; flex:none; width:52px; height:44px; }
+        .switch::before { content:''; position:absolute; left:4px; top:9px; width:44px; height:26px; border-radius:99px; background:var(--slate-300); transition:background 0.15s; }
+        .switch::after { content:''; position:absolute; left:7px; top:12px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,0.2); transition:transform 0.15s; }
+        .switch[aria-pressed="true"]::before { background:var(--accent-dark); }
+        .switch[aria-pressed="true"]::after { transform:translateX(18px); }
+        .reset-row { display:flex; justify-content:center; }
+        .reset-btn { min-height:44px; padding:0.5rem 1rem; font-size:0.875rem; font-weight:500; color:#64748b; border-radius:10px; text-decoration:underline; text-decoration-color:#cbd5e1; text-underline-offset:3px; }
+        .reset-btn:hover { color:#b91c1c; background:#fef2f2; }
+
+        /* Groot scherm */
+        .exit-present { display:none; position:fixed; top:0.75rem; right:0.75rem; z-index:30; background:#fff; border:1px solid var(--slate-200); box-shadow:0 4px 14px rgba(15,23,42,0.1); }
+        body.present { background:#fff; }
+        body.present .oc-head, body.present .oc-footer, body.present .set, body.present #present-btn, body.present .hint { display:none !important; }
+        body.present .exit-present { display:inline-flex; }
+        body.present .main { max-width:none; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+        body.present .card { border:0; box-shadow:none; width:100%; max-width:1100px; padding:0; }
+        body.present .card.ended { box-shadow:none; }
+        body.present { --ring: clamp(220px, min(46vh, 80vw), 520px); }
+        body.present .question { font-size:clamp(1.75rem, 3.6vw, 3rem); }
+        body.present .turn { font-size:clamp(1.75rem, 3.4vw, 2.75rem); margin-top:0.75rem; }
+        body.present .timer-label { font-size:clamp(1rem, 2vw, 1.5rem); }
+        body.present .status { font-size:clamp(1.25rem, 2.4vw, 1.75rem); }
+        body.present .btn { min-height:56px; font-size:1.125rem; padding:0 1.5rem; }
+
+        /* Melding */
+        .toast { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom, 0px) + 1.25rem); transform:translate(-50%, calc(100% + 3rem)); visibility:hidden; z-index:50;
+          background:var(--slate-800); color:#fff; border-radius:12px; padding:0.5rem 0.5rem 0.5rem 1rem; display:flex; align-items:center; gap:0.75rem; font-size:0.9375rem;
+          box-shadow:0 10px 30px rgba(15,23,42,0.25); transition:transform 0.25s ease, visibility 0s 0.25s; max-width:calc(100% - 2rem); }
+        .toast.show { transform:translate(-50%, 0); visibility:visible; transition:transform 0.25s ease; }
+        .toast button { color:#6ee7b7; font-weight:600; min-height:44px; padding:0 0.625rem; border-radius:8px; }
+
+        footer.oc-footer { text-align:center; padding:1.5rem 1.5rem calc(env(safe-area-inset-bottom, 0px) + 1.5rem); border-top:1px solid #e2e8f0; background:#fff; }
+        footer.oc-footer .oc-quote { font-size:0.8125rem; line-height:1.5; color:#047857; margin:0; }
+
+        :focus-visible { outline:2px solid #047857 !important; outline-offset:2px; }
+        .oc-import { color:#047857; min-height:44px; }
+        @keyframes soft { 0%, 100% { box-shadow:0 0 0 4px var(--accent-50); } 50% { box-shadow:0 0 0 10px var(--accent-light); } }
+        .card.ended { animation:soft 1.6s ease-in-out 2; }
+        body.present .card.ended { animation:none; }
+        @media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+        @media (hover: none) and (pointer: coarse) { .hint { display:none; } }
+        @media (forced-colors: active) { .chip[aria-pressed="true"], .switch[aria-pressed="true"] { border:2px solid Highlight; } }
     </style>
 </head>
 <body>
     <header class="header oc-head">
-        <a href="https://onderconstructie.github.io/projectmanagement/" class="back-link" aria-label="Terug naar Projectmanagement">
+        <a href="https://onderconstructie.github.io/projectmanagement/#vergaderen" class="back-link" aria-label="Terug naar Vergaderen">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Projectmanagement
+            Vergaderen
         </a>
         <div class="logo" aria-hidden="true">
             <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/><circle cx="20" cy="22" r="11" fill="#fff" stroke="#94a3b8" stroke-width="2"/><path d="M20 22V14A8 8 0 1 1 13.07 26.00Z" fill="#10b981"/><path d="M17 7.5h6M20 7.5v3.5" stroke="#64748b" stroke-width="2" stroke-linecap="round"/><path d="M29 12.5l1.8-1.8" stroke="#64748b" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
         <h1 class="title">De Mono-Minuut</h1>
-        <p class="subtitle">Rondje: elk één minuut aan het woord</p>
+        <p class="subtitle">Rondje: iedereen om de beurt aan het woord</p>
     </header>
 
     <main class="main">
-        <div class="card">
-            <!-- Check-in vraag -->
-            <p id="checkInQuestion" class="check-in-question">Wat houdt je op dit moment bezig?</p>
+        <section class="card" id="card" aria-label="Rondje">
+            <p class="question" id="question"></p>
+            <p class="turn" id="turn" hidden></p>
 
-            <!-- Timer -->
-            <div class="timer-container">
-                <div class="timer-ring-bg"></div>
-                <canvas id="timerCanvas" class="timer-canvas" width="280" height="280" aria-hidden="true"></canvas>
+            <div class="timer" id="timer">
+                <div class="timer-bg"></div>
+                <canvas id="canvas" aria-hidden="true"></canvas>
                 <div class="timer-center">
-                    <span id="timerValue" class="timer-value">60</span>
-                    <span class="timer-label">seconden</span>
+                    <span class="timer-value" id="value" role="timer" aria-live="off">60</span>
+                    <span class="timer-label" id="unit">seconden</span>
                 </div>
             </div>
 
-            <!-- Status -->
-            <p id="statusText" class="status-text" role="status" aria-live="polite">Klaar om te starten</p>
-
-            <!-- Buttons -->
-            <div id="startView">
-                <button id="startBtn" class="btn btn-primary">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    Start
-                </button>
+            <div class="controls">
+                <button class="btn btn-primary" id="go" type="button"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Start</span></button>
+                <button class="btn btn-soft" id="next" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg><span>Volgende</span></button>
+                <button class="btn btn-ghost" id="stop" type="button" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>Stop</span></button>
+                <button class="btn btn-ghost" id="present-btn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span>Toon op groot scherm</span></button>
             </div>
+            <p class="status" id="status" role="status" aria-live="polite">Klaar om te starten</p>
+            <p class="hint">Tip: druk op <kbd>Spatie</kbd> om te starten of te pauzeren.</p>
 
-            <div id="runningView" class="hidden">
-                <button id="stopBtn" class="btn btn-secondary">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="6" width="12" height="12" rx="1"/>
-                    </svg>
-                    Stop
-                </button>
-            </div>
-
-            <div id="completeView" class="hidden fade-in">
-                <button id="resetBtn" class="btn btn-primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                        <path d="M3 3v5h5"/>
-                    </svg>
-                    Opnieuw
-                </button>
-            </div>
-        </div>
+            <details class="set" id="set">
+                <summary><span>Vraag, duur en sprekers</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <div class="set-body">
+                    <label><span class="lbl">Vraag</span><input class="field" id="q-in" maxlength="160" placeholder="Wat houdt je op dit moment bezig?"></label>
+                    <div>
+                        <span class="lbl" id="dur-lbl">Tijd per persoon</span>
+                        <div class="chips" role="group" aria-labelledby="dur-lbl" id="chips">
+                            <button type="button" class="chip" data-s="30" aria-pressed="false">30 s</button>
+                            <button type="button" class="chip" data-s="60" aria-pressed="false">1 min</button>
+                            <button type="button" class="chip" data-s="90" aria-pressed="false">1,5 min</button>
+                            <button type="button" class="chip" data-s="120" aria-pressed="false">2 min</button>
+                            <button type="button" class="chip" data-s="180" aria-pressed="false">3 min</button>
+                            <label class="own">of <input id="own-s" type="number" inputmode="numeric" min="10" max="900" placeholder="…" aria-label="Eigen duur in seconden"> sec</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="sp-in" class="lbl">Sprekers, in volgorde <small>(mag leeg blijven)</small></label>
+                        <textarea class="field" id="sp-in" placeholder="Eén naam per regel, of gescheiden door komma's"></textarea>
+                        <div class="row">
+                            <span class="count" id="sp-count"></span>
+                            <button type="button" class="link-btn" id="shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>Volgorde husselen</button>
+                            <button type="button" class="link-btn oc-import" id="import-btn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Overnemen uit…</button>
+                        </div>
+                    </div>
+                    <div class="switch-row">
+                        <div>Zacht geluid op het einde<small>Op een gsm trilt hij ook even.</small></div>
+                        <button type="button" class="switch" id="sound" aria-pressed="true" aria-label="Zacht geluid op het einde"></button>
+                    </div>
+                    <div class="reset-row"><button type="button" class="reset-btn" id="reset-all">Alles terugzetten</button></div>
+                </div>
+            </details>
+        </section>
     </main>
+
+    <button class="btn exit-present" id="exit-present" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Sluit groot scherm</button>
 
     <footer class="footer oc-footer">
         <p class="quote oc-quote">Spreken is zilver, luisteren is goud.</p>
     </footer>
 
+    <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" id="toast-btn" hidden>Ongedaan</button></div>
+
     <script>
-        // Elements
-        const canvas = document.getElementById('timerCanvas');
-        const ctx = canvas.getContext('2d');
-        const timerValue = document.getElementById('timerValue');
-        const statusText = document.getElementById('statusText');
-        const checkInQuestion = document.getElementById('checkInQuestion');
-        const startView = document.getElementById('startView');
-        const runningView = document.getElementById('runningView');
-        const completeView = document.getElementById('completeView');
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const resetBtn = document.getElementById('resetBtn');
+/* ---------- Overnemen tussen tools (gedeeld door de Onder Constructie-tools, v2) ----------
+   Alle tools draaien op hetzelfde domein en delen dus localStorage. Elke tool legt wat hij te bieden
+   heeft klaar onder 'oc.share.<tool-id>', in een vaste vorm, zodat andere tools het kunnen overnemen
+   zonder elkaars binnenkant te kennen.
 
-        // Config
-        const totalSeconds = 60;
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const radius = 130;
+   Soorten (type):
+     'betrokkene'  persoon, rol, stakeholder, doelgroep of team   { text, note? }
+     'taak'        iets dat gedaan moet worden                     { text, note? }
+     'actie'       taak met eigenaar en/of termijn                 { text, who?, when? }
+     'risico'      risico met kans en impact                       { text, note? }
 
-        // State
-        let startTime = null;
-        let animationId = null;
-        let isRunning = false;
+   Gebruik:
+     ocShare.publish('raci', 'RACI-matrix', [
+       { name:'Heraanleg stadspark', items:[ { type:'betrokkene', text:'Projectleider' }, { type:'taak', text:'Budget goedkeuren' } ] }
+     ]);                                   // aanroepen na elke bewaring
+     ocShare.clear('raci');                // bij "Alles wissen"
+     const gekozen = await ocShare.pick({ types:['betrokkene'], self:'weerstand', title:'Doelgroepen overnemen' });
+     // geeft [] terug bij annuleren, anders de aangevinkte items (met .source en .list erbij)
+*/
+const ocShare = (() => {
+  const PREFIX = 'oc.share.';
+  const LABEL = { betrokkene:'betrokkenen', taak:'taken', actie:'acties', risico:"risico's" };
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
-        // Draw the timer ring
-        function drawRing(progress) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            progress = Math.min(1, Math.max(0, progress));
-            if (progress >= 1) return;   // tijd om: de ring is leeg
-            
-            // Calculate color - from bright green to faded
-            const hue = 152; // emerald green
-            const saturation = 76;
-            const lightness = 30 + (progress * 20); // gets lighter as time passes
-            const alpha = 1 - (progress * 0.6); // fades out
-            
-            // Draw arc (full circle minus progress)
-            const startAngle = -Math.PI / 2; // Start at top
-            const endAngle = startAngle + (2 * Math.PI * (1 - progress));
-            
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-            ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
-            ctx.lineWidth = 6;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-        }
+  function publish(id, tool, lists) {
+    try {
+      const clean = (lists || []).map(l => ({
+        name: String(l.name || '').slice(0, 80),
+        items: (l.items || []).filter(i => i && i.type && String(i.text || '').trim())
+          .slice(0, 300).map(i => ({ type:i.type, text:String(i.text).trim().slice(0, 300),
+            note: i.note ? String(i.note).slice(0, 200) : undefined, who: i.who || undefined, when: i.when || undefined }))
+      })).filter(l => l.items.length);
+      if (!clean.length) { localStorage.removeItem(PREFIX + id); return; }
+      localStorage.setItem(PREFIX + id, JSON.stringify({ id, tool, updated: Date.now(), lists: clean }));
+    } catch {}
+  }
+  function clear(id) { try { localStorage.removeItem(PREFIX + id); } catch {} }
 
-        // Update timer
-        function updateTimer(currentTime) {
-            if (!startTime) startTime = currentTime;
-            
-            const elapsed = (currentTime - startTime) / 1000;
-            const remaining = Math.max(0, totalSeconds - elapsed);
-            const progress = elapsed / totalSeconds;
-            
-            // Update display
-            timerValue.textContent = Math.ceil(remaining);
-            
-            // Draw ring
-            drawRing(progress);
-            
-            // Continue or complete
-            if (remaining > 0) {
-                animationId = requestAnimationFrame(updateTimer);
-            } else {
-                complete();
-            }
-        }
-
-        // Start timer
-        function start() {
-            isRunning = true;
-            startTime = null;
-            
-            startView.classList.add('hidden');
-            runningView.classList.remove('hidden');
-            completeView.classList.add('hidden');
-            
-            checkInQuestion.classList.add('dimmed');
-            statusText.textContent = 'Luister... niet onderbreken.';
-            statusText.classList.add('active', 'pulsing');
-            
-            animationId = requestAnimationFrame(updateTimer);
-        }
-
-        // Stop timer
-        function stop() {
-            isRunning = false;
-            cancelAnimationFrame(animationId);
-            
-            runningView.classList.add('hidden');
-            startView.classList.remove('hidden');
-            
-            checkInQuestion.classList.remove('dimmed');
-            statusText.textContent = 'Klaar om te starten';
-            statusText.classList.remove('active', 'pulsing');
-            
-            // Reset
-            timerValue.textContent = '60';
-            drawRing(0);
-        }
-
-        // Complete
-        function complete() {
-            isRunning = false;
-            
-            runningView.classList.add('hidden');
-            completeView.classList.remove('hidden');
-            completeView.classList.add('fade-in');
-            
-            statusText.textContent = 'Dankjewel.';
-            statusText.classList.remove('pulsing');
-
-            // klaar moet er anders uitzien dan klaar om te starten: lege ring, groene nul
-            timerValue.textContent = '0';
-            timerValue.style.color = '#047857';
-            drawRing(1);
-        }
-
-        // Reset
-        function reset() {
-            completeView.classList.add('hidden');
-            startView.classList.remove('hidden');
-            
-            checkInQuestion.classList.remove('dimmed');
-            statusText.textContent = 'Klaar om te starten';
-            statusText.classList.remove('active');
-            
-            timerValue.textContent = '60';
-            timerValue.style.color = '';
-            drawRing(0);
-        }
-
-        // Event listeners
-        startBtn.addEventListener('click', start);
-        stopBtn.addEventListener('click', stop);
-        resetBtn.addEventListener('click', reset);
-
-        // Keyboard: Space to start/reset
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                // spatie op een knop of link laat de browser zelf afhandelen
-                if (e.target.closest && e.target.closest('button, a, input, textarea, select')) return;
-                e.preventDefault();
-                if (!startView.classList.contains('hidden')) {
-                    start();
-                } else if (!completeView.classList.contains('hidden')) {
-                    reset();
-                }
-            }
+  // Elke bron apart: één kapotte sleutel mag de andere niet verbergen.
+  function sources(types, self) {
+    const out = [];
+    let keys = [];
+    try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); } catch { return out; }
+    keys.forEach(k => {
+      if (!k || !k.startsWith(PREFIX) || k === PREFIX + self) return;
+      try {
+        const d = JSON.parse(localStorage.getItem(k));
+        if (!d || !Array.isArray(d.lists)) return;
+        d.lists.forEach(l => {
+          if (!l || !Array.isArray(l.items)) return;
+          const items = l.items.filter(it => it && types.includes(it.type) && typeof it.text === 'string');
+          if (items.length) out.push({ tool: String(d.tool || d.id || k.slice(PREFIX.length)), id: d.id, updated: +d.updated || 0, list: String(l.name || ''), items });
         });
+      } catch {}
+    });
+    return out.sort((a, b) => (b.updated || 0) - (a.updated || 0));
+  }
 
-        // Initial draw
-        drawRing(0);
+  let styled = false;
+  function style() {
+    if (styled) return; styled = true;
+    const s = document.createElement('style');
+    s.textContent = `
+      .ocs-back{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.45);
+        backdrop-filter:blur(3px);opacity:0;transition:opacity .15s;font-family:'DM Sans',system-ui,sans-serif}
+      @media(min-width:640px){.ocs-back{align-items:center;padding:1rem}}
+      .ocs-back.open{opacity:1}
+      .ocs{width:100%;max-width:520px;max-height:min(86vh,720px);display:flex;flex-direction:column;background:#fff;border-radius:18px 18px 0 0;
+        box-shadow:0 20px 50px rgba(15,23,42,.25);transform:translateY(12px);transition:transform .15s;color:#1e293b}
+      @media(min-width:640px){.ocs{border-radius:18px}}
+      .ocs-back.open .ocs{transform:none}
+      .ocs-head{padding:1.125rem 1.25rem .75rem;border-bottom:1px solid #e2e8f0}
+      .ocs-title{font-size:1.125rem;font-weight:700;letter-spacing:-.02em}
+      .ocs-sub{font-size:.8125rem;color:#64748b;margin-top:.125rem}
+      .ocs-body{overflow:auto;padding:.5rem 1.25rem 1rem;flex:1}
+      .ocs-src{margin-top:.875rem}
+      .ocs-src-head{display:flex;align-items:center;gap:.5rem;padding:.375rem 0}
+      .ocs-src-head b{font-size:.9375rem}
+      .ocs-src-head span{font-size:.75rem;color:#64748b}
+      .ocs-all{margin-left:auto;font:inherit;font-size:.8125rem;color:#047857;background:none;border:0;cursor:pointer;padding:.25rem .5rem;min-height:44px;border-radius:6px}
+      .ocs-all:hover{background:#d1fae5}
+      .ocs-item{display:flex;align-items:flex-start;gap:.625rem;padding:.625rem .25rem;min-height:44px;box-sizing:border-box;border-top:1px solid #f1f5f9;cursor:pointer;font-size:.9375rem;line-height:1.4}
+      .ocs-item input{width:18px;height:18px;margin-top:.125rem;accent-color:#10b981;flex:none}
+      .ocs-item small{display:block;font-size:.75rem;color:#64748b}
+      .ocs-empty{padding:1.5rem .25rem;color:#64748b;font-size:.9375rem;line-height:1.5}
+      .ocs-foot{display:flex;gap:.5rem;justify-content:flex-end;padding:.875rem 1.25rem calc(.875rem + env(safe-area-inset-bottom,0px));border-top:1px solid #e2e8f0}
+      .ocs-btn{font:inherit;font-size:.9375rem;font-weight:600;padding:.625rem 1rem;min-height:44px;border-radius:10px;border:0;cursor:pointer}
+      .ocs-cancel{background:#f1f5f9;color:#475569}
+      .ocs-ok{background:#047857;color:#fff}.ocs-ok:hover{background:#065f46}
+      .ocs-ok:disabled{background:#cbd5e1;color:#334155;cursor:default}
+      .ocs-back :focus-visible{outline:2px solid #047857;outline-offset:2px}`;
+    document.head.appendChild(s);
+  }
+
+  function pick({ types, self, title, intro }) {
+    style();
+    return new Promise(resolve => {
+      const src = sources(types, self);
+      const back = document.createElement('div');
+      back.className = 'ocs-back';
+      const what = types.map(t => LABEL[t] || t).join(' of ');
+      back.innerHTML = `<div class="ocs" role="dialog" aria-modal="true" aria-label="${esc(title || 'Overnemen')}">
+        <div class="ocs-head"><div class="ocs-title">${esc(title || 'Overnemen uit een andere tool')}</div>
+          <div class="ocs-sub">${esc(intro || `Kies welke ${what} je wil overnemen.`)}</div></div>
+        <div class="ocs-body">${src.length ? src.map((s, si) => `
+          <div class="ocs-src"><div class="ocs-src-head"><b>${esc(s.tool)}</b><span>${esc(s.list)} · ${s.items.length}</span>
+            <button class="ocs-all" type="button" data-all="${si}">alles</button></div>
+            ${s.items.map((it, ii) => `<label class="ocs-item"><input type="checkbox" data-s="${si}" data-i="${ii}">
+              <span>${esc(it.text)}${it.who || it.when || it.note ? `<small>${esc([it.who, it.when, it.note].filter(Boolean).join(' · '))}</small>` : ''}</span></label>`).join('')}
+          </div>`).join('') : `<p class="ocs-empty">Er zijn nog geen ${esc(what)} om over te nemen. Vul ze eerst in een andere tool van Onder Constructie in, dan verschijnen ze hier.</p>`}
+        </div>
+        <div class="ocs-foot"><button class="ocs-btn ocs-cancel" type="button">Annuleer</button>
+          <button class="ocs-btn ocs-ok" type="button" disabled>Neem over</button></div></div>`;
+      document.body.appendChild(back);
+      requestAnimationFrame(() => back.classList.add('open'));
+      const ok = back.querySelector('.ocs-ok');
+      const boxes = () => [...back.querySelectorAll('input[type=checkbox]')];
+      const sync = () => { const n = boxes().filter(b => b.checked).length; ok.disabled = !n; ok.textContent = n ? `Neem ${n} over` : 'Neem over'; };
+      back.addEventListener('change', sync);
+      back.addEventListener('click', e => {
+        const a = e.target.closest('[data-all]');
+        if (a) { const bs = boxes().filter(b => b.dataset.s === a.dataset.all); const all = bs.every(b => b.checked); bs.forEach(b => b.checked = !all); sync(); }
+        if (e.target === back) close([]);
+      });
+      function close(v) { document.removeEventListener('keydown', onKey, true); back.remove(); resolve(v); }
+      function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close([]); } }
+      document.addEventListener('keydown', onKey, true);
+      back.querySelector('.ocs-cancel').addEventListener('click', () => close([]));
+      ok.addEventListener('click', () => close(boxes().filter(b => b.checked).map(b => {
+        const s = src[+b.dataset.s]; return { ...s.items[+b.dataset.i], source: s.tool, list: s.list };
+      })));
+      const first = back.querySelector('input,.ocs-cancel'); first && first.focus();
+    });
+  }
+
+  // Hoeveel er klaarligt voor deze soorten (om een knop te tonen of een teller te zetten).
+  const count = (types, self) => sources(types, self).reduce((n, s) => n + s.items.length, 0);
+  return { publish, clear, pick, count, sources, esc };
+})();
+
+
+/* ---------- Instellingen (bewaard op dit toestel) ---------- */
+const KEY = 'checkin.v1';
+const DEFAULT_Q = 'Wat houdt je op dit moment bezig?';
+const $ = id => document.getElementById(id);
+function fresh() { return { question: DEFAULT_Q, seconds: 60, speakers: [], sound: true }; }
+function load() {
+    try {
+        const d = JSON.parse(localStorage.getItem(KEY));
+        if (d && typeof d === 'object') {
+            const f = fresh();
+            return {
+                question: typeof d.question === 'string' && d.question.trim() ? d.question.slice(0, 160) : f.question,
+                seconds: Number.isFinite(+d.seconds) && +d.seconds >= 10 && +d.seconds <= 900 ? Math.round(+d.seconds) : f.seconds,
+                speakers: Array.isArray(d.speakers) ? d.speakers.filter(s => typeof s === 'string' && s.trim()).map(s => s.trim().slice(0, 60)).slice(0, 100) : [],
+                sound: d.sound !== false
+            };
+        }
+    } catch {}
+    return fresh();
+}
+let st = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {} }
+const parseNames = t => [...new Set(String(t).split(/[\n,;]+/).map(s => s.trim().slice(0, 60)).filter(Boolean))].slice(0, 100);
+
+/* ---------- Rondje ---------- */
+// phase: ready | running | paused | ended | finished (alle sprekers geweest)
+let phase = 'ready', idx = 0, left = st.seconds, endAt = 0, raf = null;
+const canvas = $('canvas'), ctx = canvas.getContext('2d');
+function fitCanvas() {
+    const r = $('timer').getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const px = Math.max(100, Math.round(r.width * dpr));
+    if (canvas.width !== px) { canvas.width = px; canvas.height = px; }
+}
+function drawRing() {
+    fitCanvas();
+    const w = canvas.width, c = w / 2, lw = Math.max(6, w * 0.022), rad = c - lw * 1.2;
+    ctx.clearRect(0, 0, w, w);
+    const progress = 1 - left / st.seconds;
+    if (progress >= 1) return;
+    const start = -Math.PI / 2, end = start + 2 * Math.PI * (1 - progress);
+    ctx.beginPath(); ctx.arc(c, c, rad, start, end);
+    ctx.strokeStyle = left <= 10 && st.seconds > 20 && phase !== 'ready' ? '#f59e0b' : `hsla(152, 76%, ${30 + progress * 18}%, ${1 - progress * 0.5})`;
+    ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+}
+const fmt = s => { s = Math.max(0, Math.ceil(s)); return st.seconds > 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : String(s); };
+const who = i => st.speakers[i] || '';
+const hasList = () => st.speakers.length > 0;
+
+function render() {
+    $('question').textContent = st.question;
+    // Nu en volgende
+    if (hasList()) {
+        const now = phase === 'finished' ? '' : who(idx), nxt = phase === 'finished' ? '' : who(idx + 1);
+        $('turn').hidden = phase === 'finished';
+        $('turn').innerHTML = `Nu: <b>${ocShare.esc(now)}</b>${nxt ? `<span class="sep" aria-hidden="true">·</span><span class="next">Volgende: ${ocShare.esc(nxt)}</span>` : '<span class="sep" aria-hidden="true">·</span><span class="next">laatste</span>'}`;
+    } else $('turn').hidden = true;
+
+    $('value').textContent = phase === 'ended' || phase === 'finished' ? '0' : fmt(left);
+    $('unit').textContent = st.seconds > 60 ? 'minuten' : 'seconden';
+    $('timer').classList.toggle('last', (phase === 'running' || phase === 'paused') && left <= 10 && st.seconds > 20);
+    $('timer').classList.toggle('done', phase === 'ended' || phase === 'finished');
+    $('card').classList.toggle('ended', phase === 'ended' || phase === 'finished');
+
+    const go = $('go'), running = phase === 'running';
+    go.hidden = phase === 'ended' && hasList() && idx + 1 < st.speakers.length;
+    go.querySelector('span').textContent = running ? 'Pauze' : phase === 'paused' ? 'Verder' : (phase === 'ended' || phase === 'finished') ? 'Opnieuw' : 'Start';
+    go.querySelector('svg').innerHTML = running ? '<rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/>' : '<path d="M8 5v14l11-7z"/>';
+    const canNext = hasList() && idx + 1 < st.speakers.length && phase !== 'finished' && phase !== 'ready';
+    $('next').hidden = !canNext;
+    $('next').classList.toggle('btn-primary', phase === 'ended');
+    $('next').classList.toggle('btn-soft', phase !== 'ended');
+    $('next').querySelector('span').textContent = canNext ? `Volgende: ${who(idx + 1)}` : 'Volgende';
+    $('stop').hidden = phase === 'ready' || phase === 'finished' || (phase === 'ended' && !hasList());
+
+    const s = $('status');
+    s.classList.toggle('active', running);
+    s.textContent = running ? 'Luister, niet onderbreken.'
+        : phase === 'paused' ? 'Even gepauzeerd.'
+        : phase === 'ended' ? (hasList() ? `Tijd om. Dankjewel, ${who(idx)}.` : 'Tijd om. Dankjewel.')
+        : phase === 'finished' ? 'Rondje klaar. Iedereen kwam aan het woord.'
+        : hasList() ? `${st.speakers.length} ${st.speakers.length === 1 ? 'spreker' : 'sprekers'}, ${fmtDur(st.seconds)} per persoon.` : 'Klaar om te starten';
+    drawRing();
+    if (phase === 'running') document.title = `${fmt(left)} · Mono-Minuut`; else document.title = 'De Mono-Minuut – Onder Constructie';
+}
+const fmtDur = s => s % 60 === 0 ? `${s / 60} min` : s > 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`;
+
+function tick() {
+    left = Math.max(0, (endAt - performance.now()) / 1000);
+    if (left <= 0) { finishTurn(); return; }
+    render();
+    raf = requestAnimationFrame(tick);
+}
+function start() {
+    if (phase === 'ended' || phase === 'finished') { restart(); }
+    if (phase === 'ready') left = st.seconds;
+    phase = 'running'; endAt = performance.now() + left * 1000;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); wake(true); render();
+}
+function pause() { phase = 'paused'; cancelAnimationFrame(raf); wake(false); render(); }
+function finishTurn() {
+    cancelAnimationFrame(raf); left = 0; wake(false);
+    phase = hasList() && idx + 1 >= st.speakers.length ? 'finished' : 'ended';
+    if (st.sound) chime();
+    render();
+    const n = $('next'); if (!n.hidden && document.activeElement && document.activeElement.closest && document.activeElement.closest('.controls')) n.focus();
+}
+function next() {
+    if (!(hasList() && idx + 1 < st.speakers.length)) return;
+    idx++; left = st.seconds; phase = 'ready'; start();
+}
+function restart() { cancelAnimationFrame(raf); wake(false); phase = 'ready'; idx = 0; left = st.seconds; render(); }
+
+/* Zacht eindsignaal: drie lage tonen en een kort trilsignaal */
+function chime() {
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        [[523, 0], [659, 0.22], [784, 0.44]].forEach(([f, at]) => {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = 'sine'; o.frequency.value = f;
+            g.gain.setValueAtTime(0.0001, ac.currentTime + at);
+            g.gain.exponentialRampToValueAtTime(0.12, ac.currentTime + at + 0.04);
+            g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + at + 0.7);
+            o.connect(g).connect(ac.destination); o.start(ac.currentTime + at); o.stop(ac.currentTime + at + 0.75);
+        });
+        setTimeout(() => ac.close(), 1600);
+    } catch {}
+    try { navigator.vibrate && navigator.vibrate([120, 80, 120]); } catch {}
+}
+let lock = null;
+async function wake(on) {
+    try {
+        if (on && 'wakeLock' in navigator && !lock) lock = await navigator.wakeLock.request('screen');
+        if (!on && lock) { await lock.release(); lock = null; }
+    } catch { lock = null; }
+}
+
+$('go').addEventListener('click', () => phase === 'running' ? pause() : start());
+$('next').addEventListener('click', next);
+$('stop').addEventListener('click', restart);
+document.addEventListener('keydown', e => {
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    if (e.target.closest && e.target.closest('button, a, input, textarea, select, summary, [contenteditable]')) return;
+    e.preventDefault();
+    if (phase === 'running') pause();
+    else if (phase === 'ended' && hasList() && idx + 1 < st.speakers.length) next();
+    else start();
+});
+
+/* ---------- Instellingen ---------- */
+function renderSettings() {
+    if (document.activeElement !== $('q-in')) $('q-in').value = st.question === DEFAULT_Q ? '' : st.question;
+    document.querySelectorAll('#chips .chip').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.s === st.seconds)));
+    const preset = [30, 60, 90, 120, 180].includes(st.seconds);
+    if (document.activeElement !== $('own-s')) $('own-s').value = preset ? '' : st.seconds;
+    if (document.activeElement !== $('sp-in')) $('sp-in').value = st.speakers.join('\n');
+    const n = st.speakers.length;
+    $('sp-count').textContent = n ? `${n} ${n === 1 ? 'spreker' : 'sprekers'}` : 'Geen lijst: gewoon één timer.';
+    $('shuffle').hidden = n < 2;
+    $('sound').setAttribute('aria-pressed', String(!!st.sound));
+}
+function setSeconds(s) {
+    st.seconds = s; save();
+    if (phase === 'ready' || phase === 'ended' || phase === 'finished') { phase = 'ready'; left = s; }
+    renderSettings(); render();
+}
+$('q-in').addEventListener('input', () => { st.question = $('q-in').value.trim().slice(0, 160) || DEFAULT_Q; save(); render(); });
+$('chips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setSeconds(+c.dataset.s); });
+$('own-s').addEventListener('change', () => {
+    const v = Math.round(+$('own-s').value);
+    if (v >= 10 && v <= 900) setSeconds(v); else { $('own-s').value = ''; toast('Kies tussen 10 en 900 seconden'); }
+});
+$('sp-in').addEventListener('input', () => {
+    st.speakers = parseNames($('sp-in').value); save();
+    if (idx >= st.speakers.length) idx = 0;
+    if (phase === 'finished') phase = 'ready';
+    $('sp-count').textContent = st.speakers.length ? `${st.speakers.length} ${st.speakers.length === 1 ? 'spreker' : 'sprekers'}` : 'Geen lijst: gewoon één timer.';
+    $('shuffle').hidden = st.speakers.length < 2;
+    render();
+});
+$('sp-in').addEventListener('blur', renderSettings);
+$('shuffle').addEventListener('click', () => {
+    const restore = snapshot(), a = st.speakers.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    st.speakers = a; save(); restart(); renderSettings(); toast('Volgorde gehusseld', restore);
+});
+$('sound').addEventListener('click', () => { st.sound = !st.sound; save(); renderSettings(); });
+$('reset-all').addEventListener('click', () => {
+    const restore = snapshot();
+    st = fresh(); try { localStorage.removeItem(KEY); } catch {}
+    restart(); renderSettings(); toast('Alles teruggezet', restore);
+});
+
+/* Namen overnemen uit een andere tool (Sociale Mixer, Stakeholders, …) */
+function syncImport() { $('import-btn').hidden = ocShare.count(['betrokkene'], 'check-in') === 0; }
+$('import-btn').addEventListener('click', async () => {
+    const picked = await ocShare.pick({ types:['betrokkene'], self:'check-in', title:'Sprekers overnemen', intro:'Kies wie er aan het woord komt. Ze komen achteraan in de lijst.' });
+    if (!picked.length) return;
+    const restore = snapshot();
+    const fresh = [...new Set(picked.map(p => p.text.trim().slice(0, 60)).filter(Boolean))].filter(n => !st.speakers.includes(n));
+    st.speakers = st.speakers.concat(fresh).slice(0, 100); save(); restart(); renderSettings();
+    toast(fresh.length ? `${fresh.length} ${fresh.length === 1 ? 'naam' : 'namen'} overgenomen` : 'Die namen staan er al', fresh.length ? restore : undefined);
+});
+syncImport();
+window.addEventListener('focus', syncImport);
+window.addEventListener('storage', e => { syncImport(); if (e.key === KEY) { st = load(); restart(); renderSettings(); } });
+
+/* ---------- Groot scherm ---------- */
+function present(on) {
+    document.body.classList.toggle('present', on);
+    if (on) { try { if (document.documentElement.requestFullscreen && window.self === window.top) document.documentElement.requestFullscreen().catch(() => {}); } catch {} $('go').focus(); }
+    else { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} $('present-btn').focus(); }
+    requestAnimationFrame(render);
+}
+$('present-btn').addEventListener('click', () => present(true));
+$('exit-present').addEventListener('click', () => present(false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('present')) present(false); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('present')) present(false); });
+window.addEventListener('resize', () => requestAnimationFrame(drawRing));
+
+/* ---------- Melding met ongedaan maken ---------- */
+let undoFn = null, toastT = null;
+function snapshot() { const copy = JSON.parse(JSON.stringify(st)); return () => { st = copy; save(); restart(); renderSettings(); }; }
+function toast(msg, undo) {
+    undoFn = undo || null;
+    $('toast-text').textContent = msg; $('toast-btn').hidden = !undo;
+    $('toast').classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => { $('toast').classList.remove('show'); undoFn = null; }, undo ? 6000 : 2500);
+}
+$('toast-btn').addEventListener('click', () => { if (undoFn) undoFn(); undoFn = null; $('toast').classList.remove('show'); });
+
+renderSettings();
+render();
     </script>
 </body>
 </html>
