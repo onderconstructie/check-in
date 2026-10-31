@@ -72,6 +72,9 @@
         .btn-soft:hover { background:var(--slate-200); }
         .btn-ghost { color:var(--slate-600); }
         .btn-ghost:hover { background:var(--slate-100); }
+        /* Lange naam op de knop "Volgende: …": inkorten in plaats van uit het scherm lopen */
+        #next { max-width:100%; }
+        #next span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
         .status { margin-top:0.625rem; font-size:0.9375rem; color:var(--slate-600); min-height:1.5em; }
         .status.active { color:#065f46; font-weight:600; }
         .hint { font-size:0.8125rem; color:var(--slate-500); margin-top:0.125rem; }
@@ -85,7 +88,7 @@
         .set[open] summary svg { transform:rotate(180deg); }
         .set-body { display:flex; flex-direction:column; gap:1rem; padding:0.5rem 0 0.25rem; }
         .lbl { display:block; font-size:0.8125rem; font-weight:600; color:var(--slate-600); margin-bottom:0.375rem; }
-        .lbl small { font-weight:400; color:var(--slate-500); }
+        .lbl small { font-size:0.75rem; font-weight:400; color:var(--slate-500); }
         .field { width:100%; min-height:44px; padding:0.5625rem 0.75rem; border:1.5px solid var(--slate-200); border-radius:10px; background:var(--slate-50); font-size:1rem; outline:none; }
         .field:focus { border-color:var(--accent); background:#fff; }
         textarea.field { resize:vertical; min-height:5.5rem; line-height:1.45; }
@@ -450,6 +453,7 @@ function render() {
     $('next').classList.toggle('btn-primary', phase === 'ended');
     $('next').classList.toggle('btn-soft', phase !== 'ended');
     $('next').querySelector('span').textContent = canNext ? `Volgende: ${who(idx + 1)}` : 'Volgende';
+    $('next').title = canNext ? `Volgende: ${who(idx + 1)}` : '';
     $('stop').hidden = phase === 'ready' || phase === 'finished' || (phase === 'ended' && !hasList());
 
     const s = $('status');
@@ -458,7 +462,7 @@ function render() {
         : phase === 'paused' ? 'Even gepauzeerd.'
         : phase === 'ended' ? (hasList() ? `Tijd om. Dankjewel, ${who(idx)}.` : 'Tijd om. Dankjewel.')
         : phase === 'finished' ? 'Rondje klaar. Iedereen kwam aan het woord.'
-        : hasList() ? `${st.speakers.length} ${st.speakers.length === 1 ? 'spreker' : 'sprekers'}, ${fmtDur(st.seconds)} per persoon.` : 'Klaar om te starten';
+        : hasList() ? `${st.speakers.length} ${st.speakers.length === 1 ? 'spreker' : 'sprekers'}, ${fmtDur(st.seconds)} per persoon${st.speakers.length > 1 ? `. Samen ${fmtDur(st.speakers.length * st.seconds)}` : ''}.` : 'Klaar om te starten';
     drawRing();
     if (phase === 'running') document.title = `${fmt(left)} · Mono-Minuut`; else document.title = 'De Mono-Minuut – Onder Constructie';
 }
