@@ -577,7 +577,7 @@ $('reset-all').addEventListener('click', () => {
     restart(); renderSettings(); toast('Alles teruggezet', restore);
 });
 
-/* Namen overnemen uit een andere tool (Sociale Mixer, Stakeholders, …) */
+/* Namen overnemen uit een andere tool (Sociale Mixer, Betrokkenenradar, …) */
 function syncImport() { $('import-btn').hidden = ocShare.count(['betrokkene'], 'check-in') === 0; }
 $('import-btn').addEventListener('click', async () => {
     const picked = await ocShare.pick({ types:['betrokkene'], self:'check-in', title:'Sprekers overnemen', intro:'Kies wie er aan het woord komt. Ze komen achteraan in de lijst.' });
