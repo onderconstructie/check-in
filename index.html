@@ -91,7 +91,7 @@
         .lbl small { font-size:0.75rem; font-weight:400; color:var(--slate-500); }
         .field { width:100%; min-height:44px; padding:0.5625rem 0.75rem; border:1.5px solid var(--slate-200); border-radius:10px; background:var(--slate-50); font-size:1rem; outline:none; }
         .field:focus { border-color:var(--accent); background:#fff; }
-        textarea.field { resize:vertical; min-height:5.5rem; line-height:1.45; }
+        textarea.field { resize:vertical; min-height:7.5rem; max-height:16rem; line-height:1.45; }
         .chips { display:flex; flex-wrap:wrap; gap:0.375rem; align-items:center; }
         .chip { min-height:44px; padding:0 0.875rem; border-radius:999px; border:1px solid var(--slate-200); background:#fff; font-size:0.875rem; font-weight:600; color:var(--slate-600); font-variant-numeric:tabular-nums; }
         .chip:hover { border-color:var(--slate-300); }
@@ -158,6 +158,10 @@ a, button, summary, label { touch-action:manipulation; -webkit-tap-highlight-col
     .own input { font-size:1rem; }
 }
 .oc-groot{width:44px;height:44px;min-width:44px;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;gap:0!important;flex:0 0 auto}.oc-groot svg{width:20px;height:20px;margin:0!important}
+
+/* Voet altijd onderaan, ook op een hoog scherm (tablet): zoals in de andere tools */
+body { display:flex; flex-direction:column; }
+body > main { flex:1 0 auto; width:100%; }
 </style>
 </head>
 <body>
@@ -482,6 +486,8 @@ function start() {
     if (phase === 'ready') left = st.seconds;
     phase = 'running'; endAt = performance.now() + left * 1000; shownSec = -1;
     cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); wake(true); render();
+    // Instellingen dichtklappen zodat de klok in beeld blijft (vooral op gsm en tablet)
+    const set = $('set'); if (set && set.open) { set.open = false; const c = $('card').getBoundingClientRect(); if (c.top < 0) $('card').scrollIntoView({ block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
 }
 function pause() { phase = 'paused'; cancelAnimationFrame(raf); wake(false); render(); }
 function finishTurn() {
@@ -537,7 +543,7 @@ function renderSettings() {
     document.querySelectorAll('#chips .chip').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.s === st.seconds)));
     const preset = [30, 60, 90, 120, 180].includes(st.seconds);
     if (document.activeElement !== $('own-s')) $('own-s').value = preset ? '' : st.seconds;
-    if (document.activeElement !== $('sp-in')) $('sp-in').value = st.speakers.join('\n');
+    if (document.activeElement !== $('sp-in')) { $('sp-in').value = st.speakers.join('\n'); fitSp(); }
     const n = st.speakers.length;
     $('sp-count').textContent = n ? `${n} ${n === 1 ? 'spreker' : 'sprekers'}` : 'Geen lijst: gewoon één timer.';
     $('shuffle').hidden = n < 2;
@@ -556,6 +562,10 @@ $('own-s').addEventListener('change', () => {
     const v = Math.round(+$('own-s').value);
     if (v >= 10 && v <= 900) setSeconds(v); else { $('own-s').value = ''; toast('Kies tussen 10 en 900 seconden'); }
 });
+/* Het vak groeit mee met het aantal namen, zodat je de lijst ziet zonder te scrollen */
+function fitSp() { const t = $('sp-in'); if (!t.offsetParent) return; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight + 2, 256) + 'px'; }
+$('set').addEventListener('toggle', () => { if ($('set').open) fitSp(); });
+$('sp-in').addEventListener('input', fitSp);
 $('sp-in').addEventListener('input', () => {
     st.speakers = parseNames($('sp-in').value); save();
     if (idx >= st.speakers.length) idx = 0;
