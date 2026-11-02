@@ -217,7 +217,10 @@ header.header h1 + p, header.header h1 + p.subtitle, .oc-head h1 + p, .oc-head h
             <details class="set" id="set">
                 <summary><span>Vraag, duur en sprekers</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
                 <div class="set-body">
-                    <label><span class="lbl">Vraag</span><input class="field" id="q-in" maxlength="160" placeholder="Wat houdt je op dit moment bezig?" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"></label>
+                    <div>
+                        <label><span class="lbl">Vraag</span><input class="field" id="q-in" maxlength="160" placeholder="Wat houdt je op dit moment bezig?" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"></label>
+                        <div class="row"><button type="button" class="link-btn" id="q-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg>Andere vraag</button><span class="count" id="q-hint">Voor de start of om af te sluiten.</span></div>
+                    </div>
                     <div>
                         <span class="lbl" id="dur-lbl">Tijd per persoon</span>
                         <div class="chips" role="group" aria-labelledby="dur-lbl" id="chips">
@@ -401,6 +404,10 @@ const ocShare = (() => {
 /* ---------- Instellingen (bewaard op dit toestel) ---------- */
 const KEY = 'checkin.v1';
 const DEFAULT_Q = 'Wat houdt je op dit moment bezig?';
+/* Vragen om uit te kiezen: eerst voor de start, dan om af te sluiten. Eigen formulering. */
+const VRAGEN = [DEFAULT_Q, 'Met welk gevoel kom je vandaag binnen?', 'Wat wil je uit dit overleg halen?', 'Wat ging er deze week goed?',
+    'Waar loop je nu tegenaan?', 'Wat heb je nodig om hier vandaag goed bij te zijn?',
+    'Wat neem je mee uit dit overleg?', 'Wat is jouw volgende stap?', 'Wat blijft er voor jou nog open?', 'Hoe ga je hier buiten, in één woord?'];
 const $ = id => document.getElementById(id);
 function fresh() { return { question: DEFAULT_Q, seconds: 60, speakers: [], sound: true }; }
 function load() {
@@ -572,6 +579,12 @@ function setSeconds(s) {
 ['q-in', 'own-s'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(id).blur(); } }));
 $('q-in').addEventListener('input', () => { st.question = $('q-in').value.trim().slice(0, 160) || DEFAULT_Q; save(); render(); });
 $('chips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setSeconds(+c.dataset.s); });
+$('q-next').addEventListener('click', () => {
+    const eigen = !VRAGEN.includes(st.question), restore = eigen ? snapshot() : null;
+    st.question = VRAGEN[(VRAGEN.indexOf(st.question) + 1) % VRAGEN.length]; save();
+    $('q-in').value = st.question === DEFAULT_Q ? '' : st.question; render();
+    if (eigen) toast('Je eigen vraag is vervangen', restore);
+});
 $('own-s').addEventListener('change', () => {
     const v = Math.round(+$('own-s').value);
     if (v >= 10 && v <= 900) setSeconds(v); else { $('own-s').value = ''; toast('Kies tussen 10 en 900 seconden'); }
