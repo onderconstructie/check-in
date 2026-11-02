@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
-    <title>De Mono-Minuut – Onder Constructie</title>
+    <title>Check-in – Onder Constructie</title>
     <meta name="description" content="Iedereen om de beurt even ongestoord aan het woord. Kies zelf de vraag, de duur en de volgorde.">
     <meta name="oc:groep" content="projecten">
     <meta name="oc:labels" content="vergaderen">
@@ -187,7 +187,7 @@ header.header h1 + p, header.header h1 + p.subtitle, .oc-head h1 + p, .oc-head h
         <div class="logo" aria-hidden="true">
             <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/><circle cx="20" cy="22" r="11" fill="#fff" stroke="#94a3b8" stroke-width="2"/><path d="M20 22V14A8 8 0 1 1 13.07 26.00Z" fill="#10b981"/><path d="M17 7.5h6M20 7.5v3.5" stroke="#64748b" stroke-width="2" stroke-linecap="round"/><path d="M29 12.5l1.8-1.8" stroke="#64748b" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
-        <h1 class="title">De Mono-Minuut</h1>
+        <h1 class="title">Check-in</h1>
         <p class="subtitle">Rondje: iedereen om de beurt aan het woord</p>
     </header>
 
@@ -489,7 +489,7 @@ function render() {
         : phase === 'finished' ? 'Rondje klaar. Iedereen kwam aan het woord.'
         : hasList() ? `${st.speakers.length} ${st.speakers.length === 1 ? 'spreker' : 'sprekers'}, ${fmtDur(st.seconds)} per persoon${st.speakers.length > 1 ? `. Samen ${fmtDur(st.speakers.length * st.seconds)}` : ''}.` : 'Klaar om te starten';
     drawRing();
-    if (phase === 'running') document.title = `${fmt(left)} · Mono-Minuut`; else document.title = 'De Mono-Minuut – Onder Constructie';
+    if (phase === 'running') document.title = `${fmt(left)} · Check-in`; else document.title = 'Check-in – Onder Constructie';
 }
 const fmtDur = s => s % 60 === 0 ? `${s / 60} min` : s > 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`;
 
