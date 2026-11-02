@@ -219,7 +219,7 @@ header.header h1 + p, header.header h1 + p.subtitle, .oc-head h1 + p, .oc-head h
                 <div class="set-body">
                     <div>
                         <label><span class="lbl">Vraag</span><input class="field" id="q-in" maxlength="160" placeholder="Wat houdt je op dit moment bezig?" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"></label>
-                        <div class="row"><button type="button" class="link-btn" id="q-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg>Andere vraag</button><span class="count" id="q-hint">Voor de start of om af te sluiten.</span></div>
+                        <div class="row"><span class="count" id="q-hint" style="margin-right:0">Andere vraag:</span><button type="button" class="link-btn" id="q-next" data-q="start" aria-label="Andere vraag bij de start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg>Bij de start</button><button type="button" class="link-btn" id="q-end" data-q="slot" aria-label="Andere vraag om af te sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg>Om af te sluiten</button></div>
                     </div>
                     <div>
                         <span class="lbl" id="dur-lbl">Tijd per persoon</span>
@@ -404,7 +404,7 @@ const ocShare = (() => {
 /* ---------- Instellingen (bewaard op dit toestel) ---------- */
 const KEY = 'checkin.v1';
 const DEFAULT_Q = 'Wat houdt je op dit moment bezig?';
-/* Vragen om uit te kiezen: eerst voor de start, dan om af te sluiten. Eigen formulering. */
+/* Vragen om uit te kiezen: eerst voor de start (de eerste zes), dan om af te sluiten. Eigen formulering. */
 const VRAGEN = [DEFAULT_Q, 'Met welk gevoel kom je vandaag binnen?', 'Wat wil je uit dit overleg halen?', 'Wat ging er deze week goed?',
     'Waar loop je nu tegenaan?', 'Wat heb je nodig om hier vandaag goed bij te zijn?',
     'Wat neem je mee uit dit overleg?', 'Wat is jouw volgende stap?', 'Wat blijft er voor jou nog open?', 'Hoe ga je hier buiten, in één woord?'];
@@ -520,9 +520,24 @@ function finishTurn() {
 }
 function next() {
     if (!(hasList() && idx + 1 < st.speakers.length)) return;
+    const vorige = idx, kort = (phase === 'running' || phase === 'paused') && st.seconds - left < 5;
     idx++; left = st.seconds; phase = 'ready'; start();
+    // Na minder dan 5 seconden doorgeschoven: wellicht een vergissing of iemand die er niet is. Even terug kan.
+    if (kort) toast(`${who(vorige)} overgeslagen`, () => { idx = vorige; left = st.seconds; phase = 'ready'; start(); bewaarBeurt(); });
 }
 function restart() { cancelAnimationFrame(raf); wake(false); phase = 'ready'; idx = 0; left = st.seconds; render(); }
+/* Waar het rondje stond, onthoudt alleen dit tabblad (sessionStorage): herladen of een tablet die de pagina ververst, kost je de beurt niet */
+const POS = 'checkin.beurt';
+function bewaarBeurt() { try { if (hasList() && idx > 0 && phase !== 'finished') sessionStorage.setItem(POS, JSON.stringify({ idx, at: Date.now(), sp: st.speakers.join('\n') })); else sessionStorage.removeItem(POS); } catch {} }
+function herstelBeurt() {
+    try {
+        const p = JSON.parse(sessionStorage.getItem(POS));
+        if (p && p.sp === st.speakers.join('\n') && Date.now() - p.at < 30 * 60e3 && p.idx > 0 && p.idx < st.speakers.length) {
+            idx = p.idx; phase = 'ready'; left = st.seconds;
+            setTimeout(() => toast(`Verder bij ${who(idx)}`, () => { restart(); bewaarBeurt(); }), 300);
+        }
+    } catch {}
+}
 
 /* Subtiele ping als de tijd om is, plus een kort trilsignaal op een gsm */
 function chime() {
@@ -549,6 +564,7 @@ async function wake(on) {
 $('go').addEventListener('click', () => phase === 'running' ? pause() : start());
 $('next').addEventListener('click', next);
 $('stop').addEventListener('click', restart);
+['go', 'next', 'stop'].forEach(id => $(id).addEventListener('click', bewaarBeurt));
 document.addEventListener('keydown', e => {
     if (e.code !== 'Space' && e.key !== ' ') return;
     if (e.target.closest && e.target.closest('button, a, input, textarea, select, summary, [contenteditable]')) return;
@@ -556,6 +572,7 @@ document.addEventListener('keydown', e => {
     if (phase === 'running') pause();
     else if (phase === 'ended' && hasList() && idx + 1 < st.speakers.length) next();
     else start();
+    bewaarBeurt();
 });
 
 /* ---------- Instellingen ---------- */
@@ -579,12 +596,16 @@ function setSeconds(s) {
 ['q-in', 'own-s'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(id).blur(); } }));
 $('q-in').addEventListener('input', () => { st.question = $('q-in').value.trim().slice(0, 160) || DEFAULT_Q; save(); render(); });
 $('chips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setSeconds(+c.dataset.s); });
-$('q-next').addEventListener('click', () => {
+const START_Q = VRAGEN.slice(0, 6), SLOT_Q = VRAGEN.slice(6);
+function nextQ(groep) {
     const eigen = !VRAGEN.includes(st.question), restore = eigen ? snapshot() : null;
-    st.question = VRAGEN[(VRAGEN.indexOf(st.question) + 1) % VRAGEN.length]; save();
+    const i = groep.indexOf(st.question);
+    st.question = groep[(i + 1) % groep.length]; save();
     $('q-in').value = st.question === DEFAULT_Q ? '' : st.question; render();
     if (eigen) toast('Je eigen vraag is vervangen', restore);
-});
+}
+$('q-next').addEventListener('click', () => nextQ(START_Q));
+$('q-end').addEventListener('click', () => nextQ(SLOT_Q));
 $('own-s').addEventListener('change', () => {
     const v = Math.round(+$('own-s').value);
     if (v >= 10 && v <= 900) setSeconds(v); else { $('own-s').value = ''; toast('Kies tussen 10 en 900 seconden'); }
@@ -653,6 +674,7 @@ function toast(msg, undo) {
 }
 $('toast-btn').addEventListener('click', () => { if (undoFn) undoFn(); undoFn = null; $('toast').classList.remove('show'); });
 
+herstelBeurt();
 renderSettings();
 render();
     </script>
