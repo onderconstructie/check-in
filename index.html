@@ -420,7 +420,9 @@ details.explain.oc-u .oc-u-noot a:hover { text-decoration-color:var(--u-donker);
      ]);                                   // aanroepen na elke bewaring
      ocShare.clear('raci');                // bij "Alles wissen"
      const gekozen = await ocShare.pick({ types:['betrokkene'], self:'weerstand', title:'Doelgroepen overnemen' });
-     // geeft [] terug bij annuleren, anders de aangevinkte items (met .source en .list erbij)
+     // geeft [] terug bij annuleren, anders de aangevinkte items (met .source, .bronId en .list erbij)
+     // Afspraak: een tool geeft wat ze overnam (bronId) NIET opnieuw door, tenzij ze er een eigen oordeel aan toevoegde
+     // (een score, een eigenaar, een datum). Zo blijft de bron de baas en komt wat daar verwijderd is niet terug.
      ocShare.pick({ ..., have:['Budget goedkeuren'] })  // optioneel: wat de tool al heeft, staat uitgegrijsd ("staat er al")
      ocShare.pick({ ..., vink:false })    // niets vooraf aanvinken;  notes:false  toont geen notities (voor wie alleen namen neemt)
      window.ocHave = types => [...]       // optioneel per tool: dan telt de knop "Overnemen uit andere tools" alleen wat nieuw is
@@ -576,7 +578,7 @@ const ocShare = (() => {
       document.addEventListener('keydown', onKey, true);
       back.querySelector('.ocs-cancel').addEventListener('click', () => close([]));
       ok.addEventListener('click', () => close(boxes().filter(b => b.checked).map(b => {
-        const s = src[+b.dataset.s]; return { ...s.items[+b.dataset.i], source: s.tool, list: s.list };
+        const s = src[+b.dataset.s]; return { ...s.items[+b.dataset.i], source: s.tool, bronId: s.id, list: s.list };
       })));
       const first = back.querySelector('input:not(:disabled),.ocs-cancel'); first && first.focus();
     });
@@ -606,14 +608,20 @@ function load() {
                 question: typeof d.question === 'string' && d.question.trim() ? d.question.slice(0, 160) : f.question,
                 seconds: Number.isFinite(+d.seconds) && +d.seconds >= 10 && +d.seconds <= 900 ? Math.round(+d.seconds) : f.seconds,
                 speakers: Array.isArray(d.speakers) ? d.speakers.filter(s => typeof s === 'string' && s.trim()).map(s => s.trim().slice(0, 300)).slice(0, 100) : [],
-                sound: d.sound !== false
+                sound: d.sound !== false,
+                ...(d.van && typeof d.van === 'object' ? { van: d.van } : {})
             };
         }
     } catch {}
     return fresh();
 }
 let st = load();
-function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {} }
+// Herkomst: st.van = { naam (zoals de kiezer vergelijkt): id van de tool waaruit hij overgenomen werd }.
+// Check-in legt zelf niets klaar voor andere tools; wie je in de lijst aanpast, is eigen werk (de sleutel klopt dan niet meer).
+function save() {
+    if (st.van) { const h = new Set(st.speakers.map(ocSleutel)), v = {}; Object.keys(st.van).forEach(k => { if (h.has(k) && typeof st.van[k] === 'string') v[k] = st.van[k]; }); if (Object.keys(v).length) st.van = v; else delete st.van; }
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {}
+}
 // Eén naam per regel, of gescheiden door komma's. Een regel die al een spreker is, blijft heel (bv. "Céline, coördinator" uit een andere tool).
 function parseNames(t, bekend) {
     const b = new Set((bekend || []).map(ocSleutel)), uit = [], gezien = new Set();
@@ -859,7 +867,9 @@ $('import-btn').addEventListener('click', async () => {
     if (!picked.length) return;
     const restore = snapshot(), have = new Set(al.map(ocSleutel)), fresh = [];
     let dubbel = 0;
-    picked.forEach(p => { const n = ocNaam(p.text).slice(0, 300), k = ocSleutel(n); if (!k) return; if (have.has(k)) { dubbel++; return; } have.add(k); fresh.push(n); });
+    const van = {};
+    picked.forEach(p => { const n = ocNaam(p.text).slice(0, 300), k = ocSleutel(n); if (!k) return; if (have.has(k)) { dubbel++; return; } have.add(k); fresh.push(n); van[k] = p.bronId || p.source || 'ander'; });
+    if (fresh.length) st.van = { ...(st.van || {}), ...van };
     st.speakers = st.speakers.concat(fresh).slice(0, 100); save(); restart(); renderSettings(); syncImport();
     toast(ocOvergenomen(fresh.length, alTel + dubbel, 'naam', 'namen'), fresh.length ? restore : undefined);
 });
