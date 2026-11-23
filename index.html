@@ -1081,6 +1081,7 @@ footer.footer, footer.oc-footer { padding-top:2rem; padding-bottom:calc(env(safe
 })();
 /* oc-kop v1 einde */
 </script>
+<style id="oc-ctrlz">@media (hover:hover) and (pointer:fine){#toast-btn::after,#ocToastBtn::after{content:" (Ctrl+Z)";font-weight:400;opacity:.8}}</style>
 </head>
 <body>
     <header class="header oc-head" data-oc-kop data-stand="compact"><script>ocKop.groot(false);</script>
@@ -1785,7 +1786,7 @@ function toast(msg, undo) {
     undoFn = undo || null;
     $('toast-text').textContent = msg; $('toast-btn').hidden = !undo;
     $('toast').classList.add('show');
-    clearTimeout(toastT); toastT = setTimeout(function ocT() { const w = window.ocWacht ? ocWacht($('toast')) : 0; if (w) { toastT = setTimeout(ocT, w); return; } $('toast').classList.remove('show'); undoFn = null; }, undo ? 6000 : 2500);
+    clearTimeout(toastT); toastT = setTimeout(function ocT() { const w = window.ocWacht ? ocWacht($('toast')) : 0; if (w) { toastT = setTimeout(ocT, w); return; } $('toast').classList.remove('show'); undoFn = null; }, undo ? 10000 : 4000);
 }
 $('toast-btn').addEventListener('click', () => { if (undoFn) undoFn(); undoFn = null; $('toast').classList.remove('show'); });
 
